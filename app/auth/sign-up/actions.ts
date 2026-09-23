@@ -1,0 +1,50 @@
+'use server';
+
+import { auth } from '@/lib/auth/server';
+import { prisma } from '@/lib/prisma';
+import { redirect } from 'next/navigation';
+
+export async function saveUser({ id, name, email, createdAt }: { id: string, name: string, email: string, createdAt: Date }) {
+
+
+    const dbUser = await prisma.user.create({
+        data: {
+            id,
+            name,
+            email,
+            created_at: createdAt
+        },
+    });
+
+    console.log('Created new user in database:', dbUser);
+    return { success: true };
+}
+export async function signUpWithEmail(
+    _prevState: { error: string } | null,
+    formData: FormData
+) {
+    const email = formData.get('email') as string;
+
+    if (!email) {
+        return { error: "Email address must be provided." }
+    }
+
+    // Optionally restrict sign ups based on email address
+    // if (!email.trim().endsWith("@my-company.com")) {
+    //  return { error: 'Email must be from my-company.com' };
+    // }
+
+    const { data, error } = await auth.signUp.email({
+        email,
+        name: formData.get('name') as string,
+        password: formData.get('password') as string,
+    });
+
+    if (error) {
+        return { error: error.message || 'Failed to create account' };
+    }
+    const { id, name, createdAt } = data.user
+    await saveUser({ id, name, email, createdAt })
+
+    redirect('/chat');
+}

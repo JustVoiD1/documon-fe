@@ -1,0 +1,95 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  schemas  = ["public"]
+}
+
+enum MessageRole {
+  system
+  user
+  assistant
+
+  @@schema("public")
+}
+
+model User {
+  id         String     @id @db.Uuid
+  name       String
+  email      String     @unique
+  created_at DateTime   @default(now()) @db.Timestamptz(6)
+  documents  Document[]
+
+  chats Chat[]
+
+  @@map("users")
+  @@schema("public")
+}
+
+model Document {
+  id           String  @id @db.Uuid
+  name         String
+  download_url String?
+
+  chat_id         String          @db.Uuid // Chat
+  uploaded_by     String          @db.Uuid
+  created_at      DateTime        @default(now()) @db.Timestamptz(6)
+  doc_type        String          @default("unknown") @db.VarChar(50)
+  document_chunks DocumentChunk[]
+
+  document_uploader User @relation(fields: [uploaded_by], references: [id])
+  chat              Chat @relation(fields: [chat_id], references: [id])
+
+  @@map("documents")
+  @@schema("public")
+}
+
+model DocumentChunk {
+  id          String                @id @db.Uuid
+  document_id String                @db.Uuid
+  chunk_index Int
+  content     String
+  embedding   Unsupported("vector")
+  metadata    Json?
+  page_number Int?
+  document    Document              @relation(fields: [document_id], references: [id], onDelete: Cascade)
+
+  @@map("document_chunks")
+  @@schema("public")
+}
+
+model Chat {
+  id         String   @id @db.Uuid
+  creator_id String   @db.Uuid
+  title      String?
+  created_at DateTime @default(now()) @db.Timestamptz(6)
+  updated_at DateTime @default(now()) @db.Timestamptz(6)
+
+  creator User @relation(fields: [creator_id], references: [id], onDelete: Cascade)
+
+  documents Document[]
+  messages  Message[]
+
+  @@index([creator_id])
+  @@map("chats")
+  @@schema("public")
+}
+
+model Message {
+  id              String      @id @db.Uuid
+  chat_id         String      @db.Uuid
+  role            MessageRole
+  content         String
+  context_sources Json?
+  tokens_used     Int?
+  created_at      DateTime    @default(now()) @db.Timestamptz(6)
+
+  chat Chat @relation(fields: [chat_id], references: [id], onDelete: Cascade)
+
+  @@index([chat_id, created_at])
+  @@map("messages")
+  @@schema("public")
+}
