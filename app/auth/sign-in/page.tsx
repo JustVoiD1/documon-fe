@@ -1,12 +1,12 @@
 'use client';
 
-import { useActionState } from 'react';
+import { useActionState, useState } from 'react';
 import { signInWithEmail } from './actions';
 import Link from 'next/link';
 
 export default function SignInForm() {
     const [state, formAction, isPending] = useActionState(signInWithEmail, null);
-
+    const [visible, isVisible] = useState(false)
     return (
         <form action={formAction}
             className="flex flex-col gap-5 min-h-screen items-center justify-center bg-background">
@@ -23,7 +23,7 @@ export default function SignInForm() {
 
             <div className='flex flex-col gap-1.5 w-sm'>
                 <label htmlFor="password" className="block text-sm font-medium text-foreground">Password</label>
-                <input id="password" name="password" type="password" required placeholder="*****"
+                <input id="password" name="password" type={visible ? "text" : "password"} required placeholder="*****"
                     className="block rounded-md w-full bg-white/5 px-2 py-1.5 placeholder:text-gray-500 text-foreground outline-1 outline-white/10  focus:outline-primary" />
             </div>
 

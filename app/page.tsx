@@ -1,27 +1,19 @@
-import { auth } from '@/lib/auth/server';
 import Link from 'next/link';
 import { signout } from './auth/sign-out/actions';
 import { Button } from '@/components/ui/button';
+import { getUser } from './auth/user/actions';
+
+import { redirect } from 'next/navigation';
 
 // Server components using auth methods must be rendered dynamically
 
 export const dynamic = 'force-dynamic';
 
 export default async function Home() {
-  const { data: session } = await auth.getSession();
+  const user = await getUser();
 
-  if (session?.user) {
-    return (
-      <div className="flex flex-col gap-2 min-h-screen items-center justify-center bg-background">
-
-        <h1 className="mb-4 text-4xl">
-          Logged in as <span className="font-bold underline">{session.user.name}</span>
-        </h1>
-        <form action={signout}>
-          <Button type="submit" variant="destructive">Sign out</Button>
-        </form>
-      </div>
-    );
+  if (user) {
+    redirect('/chat');
   }
 
   return (

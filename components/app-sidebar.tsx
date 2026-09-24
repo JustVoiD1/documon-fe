@@ -1,4 +1,5 @@
-import * as React from "react"
+import { Suspense } from "react"
+import Link from "next/link"
 import { NavMain } from "@/components/nav-main"
 import { NavRecents } from "@/components/nav-recents"
 import { NavUser } from "@/components/nav-user"
@@ -9,123 +10,52 @@ import {
   SidebarFooter,
   SidebarHeader,
   SidebarRail,
+  SidebarGroup,
+  SidebarMenu,
+  SidebarMenuItem,
+  SidebarMenuButton,
 } from "@/components/ui/sidebar"
-import { IconLayoutRows, IconSettings, IconFrame, IconChartPie, IconMap, IconPin } from "@tabler/icons-react"
+import { IconLayoutRows, IconPlus } from "@tabler/icons-react"
 import { getUser } from "@/app/auth/user/actions"
-import getChats from "@/lib/chats/actions"
+import { getChats } from "@/lib/chats/actions"
+import { redirect } from "next/navigation"
 
-// This is sample data.
 const logo = {
-  name: "Documon",
+  name: "DocuMon",
   icon: <IconLayoutRows />
-}
-const data = {
-  user: {
-    name: "shadcn",
-    email: "m@example.com",
-  },
-  navMain: [
-    {
-      title: "Pinned Chats",
-      url: "#",
-      icon: (
-        <IconPin
-        />
-      ),
-      items: [
-        {
-          title: "Introduction",
-          url: "#",
-        },
-        {
-          title: "Get Started",
-          url: "#",
-        },
-        {
-          title: "Tutorials",
-          url: "#",
-        },
-        {
-          title: "Changelog",
-          url: "#",
-        },
-      ],
-    },
-    {
-      title: "Settings",
-      url: "#",
-      icon: (
-        <IconSettings
-        />
-      ),
-      items: [
-        {
-          title: "General",
-          url: "#",
-        },
-        {
-          title: "Team",
-          url: "#",
-        },
-        {
-          title: "Billing",
-          url: "#",
-        },
-        {
-          title: "Limits",
-          url: "#",
-        },
-      ],
-    },
-  ],
-  Recents: [
-    {
-      name: "Design Engineering",
-      url: "#",
-      icon: (
-        <IconFrame
-        />
-      ),
-    },
-    {
-      name: "Sales & Marketing",
-      url: "#",
-      icon: (
-        <IconChartPie
-        />
-      ),
-    },
-    {
-      name: "Travel",
-      url: "#",
-      icon: (
-        <IconMap
-        />
-      ),
-    },
-  ],
 }
 
 export async function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const user = await getUser()
-  const currentUser = user ?? data.user
+  if (!user) redirect("/auth/sign-in")
   const recents = await getChats()
-  console.log(recents)
+
   return (
     <Sidebar collapsible="icon" {...props}>
       <SidebarHeader>
         <Logo logo={logo} />
       </SidebarHeader>
       <SidebarContent>
-        <NavMain items={data.navMain} />
-        <React.Suspense
-          fallback={<span>Loading...</span>}
-        >
+        <SidebarGroup>
+          <SidebarMenu>
+            <SidebarMenuItem>
+              <SidebarMenuButton
+                render={<Link href="/chat" />}
+                className="bg-primary text-primary-foreground hover:bg-primary/90 font-medium"
+              >
+                <IconPlus className="h-4 w-4" />
+                <span>New Chat</span>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          </SidebarMenu>
+        </SidebarGroup>
+        <NavMain />
+        <Suspense fallback={<div className="p-4 text-xs text-muted-foreground">Loading recents...</div>}>
           <NavRecents recents={recents} />
-        </React.Suspense>
+        </Suspense>
       </SidebarContent>
       <SidebarFooter>
-        <NavUser user={currentUser} />
+        <NavUser user={user} />
       </SidebarFooter>
       <SidebarRail />
     </Sidebar>

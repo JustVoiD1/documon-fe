@@ -44,6 +44,7 @@ CREATE TABLE "chats" (
     "title" TEXT,
     "created_at" TIMESTAMPTZ(6) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMPTZ(6) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "is_pinned" BOOLEAN NOT NULL DEFAULT false,
 
     CONSTRAINT "chats_pkey" PRIMARY KEY ("id")
 );

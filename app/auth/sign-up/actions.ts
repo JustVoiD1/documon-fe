@@ -16,7 +16,6 @@ export async function saveUser({ id, name, email, createdAt }: { id: string, nam
         },
     });
 
-    console.log('Created new user in database:', dbUser);
     return { success: true };
 }
 export async function signUpWithEmail(

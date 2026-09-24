@@ -1,10 +1,11 @@
 "use client"
 
+import Link from "next/link"
+import { usePathname, useRouter } from "next/navigation"
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import {
@@ -16,7 +17,8 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar"
-import { IconDots, IconTrash, IconPin, IconPencil } from "@tabler/icons-react"
+import { IconDots, IconTrash, IconMessage } from "@tabler/icons-react"
+import { deleteChat } from "@/lib/chats/actions"
 
 export function NavRecents({
   recents,
@@ -27,65 +29,80 @@ export function NavRecents({
   }[]
 }) {
   const { isMobile } = useSidebar()
+  const pathname = usePathname()
+  const router = useRouter()
+
+  const handleDelete = async (chatId: string) => {
+    const res = await deleteChat(chatId)
+    if (res.success) {
+      if (pathname === `/chat/${chatId}`) {
+        router.push("/chat")
+      } else {
+        router.refresh()
+      }
+    }
+  }
+
   return (
     <SidebarGroup className="group-data-[collapsible=icon]:hidden">
-      <SidebarGroupLabel>Recents</SidebarGroupLabel>
+      <SidebarGroupLabel className="flex items-center justify-between">
+        <span>Recents</span>
+      </SidebarGroupLabel>
       <SidebarMenu>
-        {recents.map((item) => (
-          <SidebarMenuItem key={item.title}>
-            <SidebarMenuButton render={<a href={item.id} />}>
-              <span>{item.title}</span>
-            </SidebarMenuButton>
-            <DropdownMenu>
-              <DropdownMenuTrigger
+        {recents.map((item) => {
+          const isActive = pathname === `/chat/${item.id}`
+
+          return (
+            <SidebarMenuItem key={item.id}>
+              <SidebarMenuButton
+                isActive={isActive}
+                tooltip={item.title || "Untitled Chat"}
                 render={
-                  <SidebarMenuAction
-                    showOnHover
-                    className="aria-expanded:bg-muted"
+                  <Link
+                    href={`/chat/${item.id}`}
+                    className={`flex items-center gap-2 w-full truncate ${isActive
+                        ? "bg-sidebar-accent text-sidebar-accent-foreground font-semibold"
+                        : ""
+                      }`}
                   />
                 }
               >
-                <IconDots
-                />
-                <span className="sr-only">More</span>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent
-                className="w-fit"
-                side={isMobile ? "bottom" : "right"}
-                align={isMobile ? "end" : "start"}
-              >
-                <DropdownMenuItem>
-                  <IconPin
-                  />
-                  <span>Pin Chat</span>
-                </DropdownMenuItem>
-                <DropdownMenuItem>
-                  <IconPencil
-                  />
-                  <span>Rename Chat</span>
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem variant="destructive">
-                  <IconTrash
-                  />
-                  <span>Delete Chat</span>
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </SidebarMenuItem>
-        ))}
-        <SidebarMenuItem>
-          {
-            recents.length > 0 ?
-              <SidebarMenuButton className="text-sidebar-foreground/70">
-                <IconDots className="text-sidebar-foreground/70" />
-                <span>More</span>
-              </SidebarMenuButton> :
-              <SidebarMenuButton>
-                <span>No recent chats</span>
+                <IconMessage className="h-4 w-4 shrink-0 opacity-70" />
+                <span className="truncate">{item.title || "Untitled Chat"}</span>
               </SidebarMenuButton>
-          }
-        </SidebarMenuItem>
+              <DropdownMenu>
+                <DropdownMenuTrigger
+                  render={
+                    <SidebarMenuAction
+                      showOnHover
+                      className="aria-expanded:bg-muted"
+                    />
+                  }
+                >
+                  <IconDots />
+                  <span className="sr-only">More</span>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent
+                  className="w-fit"
+                  side={isMobile ? "bottom" : "right"}
+                  align={isMobile ? "end" : "start"}
+                >
+                  <DropdownMenuItem variant="destructive" onClick={() => handleDelete(item.id)}>
+                    <IconTrash />
+                    <span>Delete Chat</span>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </SidebarMenuItem>
+          )
+        })}
+        {recents.length === 0 && (
+          <SidebarMenuItem>
+            <SidebarMenuButton disabled className="text-muted-foreground text-xs italic">
+              <span>No recent chats</span>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        )}
       </SidebarMenu>
     </SidebarGroup>
   )
