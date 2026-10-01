@@ -24,7 +24,7 @@ export default async function Page() {
                 </header>
                 <div className="flex flex-1 flex-col min-h-0 gap-4 p-4 pt-0 overflow-hidden">
                     <div className="h-full flex-1 min-h-0 rounded-xl bg-muted/50 overflow-hidden">
-                        <ChatWindow chatId={null} initialMessages={[]} />
+                        <ChatWindow chatId={null} />
                     </div>
                 </div>
             </SidebarInset>

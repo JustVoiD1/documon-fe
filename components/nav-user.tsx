@@ -1,5 +1,6 @@
 "use client"
 
+import { signout } from "@/app/auth/sign-out/actions"
 import {
   Avatar,
   AvatarFallback,
@@ -21,6 +22,7 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar"
 import { IconSelector, IconSparkles, IconRosetteDiscountCheck, IconCreditCard, IconBell, IconLogout } from "@tabler/icons-react"
+import { Button } from "./ui/button"
 
 export function NavUser({
   user,
@@ -96,9 +98,12 @@ export function NavUser({
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
             <DropdownMenuItem>
-              <IconLogout
-              />
-              Log out
+              <form action={signout} className="flex items-center gap-2 w-full">
+                <Button variant="destructive" className={"flex-1"} type="submit">
+                  <IconLogout />
+                  <span>Log out</span>
+                </Button>
+              </form>
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

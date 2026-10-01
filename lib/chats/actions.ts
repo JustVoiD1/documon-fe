@@ -206,6 +206,24 @@ export async function sendMessageAndGetAIResponse({
     };
 }
 
+export async function sendMessage(formData: FormData) {
+    const user = await authenticate();
+    const query = formData.get('query') as string;
+    const chatId = formData.get('chatId') as string
+
+
+    const res = await sendMessageAndGetAIResponse({
+        chatId,
+        query
+    })
+
+    return res
+
+
+
+
+}
+
 export async function uploadDocument(formData: FormData) {
     const user = await authenticate();
 
