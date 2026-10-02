@@ -19,76 +19,37 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { sendMessageAndGetAIResponse, uploadDocument } from "@/lib/chats/actions"
-import ModelSelector from "./model-selector"
+
 import { useChatContext } from "@/hooks/use-chat-context"
 import { ChatDocuments } from "./chat-documents"
+import { ChatDocumentItem, ChatMessageItem } from "@/types"
+import { sendMessageAndGetAIResponse, uploadDocument } from "@/lib/chats/actions"
 
-export interface ChatMessageItem {
-    id: string
-    role: "user" | "assistant" | "system"
-    content: string
-    created_at?: Date | string
-}
 
-export interface ChatDocumentItem {
-    id: string,
-    name: string
-    doc_type?: string
-    download_url?: string | null
-}
+// export interface ChatBoxClientProps {
+//     chatId?: string | null
+//     setMessages?: React.Dispatch<React.SetStateAction<ChatMessageItem[]>>
+//     setMessage?: React.Dispatch<React.SetStateAction<ChatMessageItem[]>> | ((msg: any) => void)
+//     onMessageSent?: (userMessage: ChatMessageItem, assistantMessage: ChatMessageItem, newChatId?: string) => void
+//     sendMessageAndGetAIResponse: (params: { chatId?: string | null; query: string }) => Promise<{
+//         chatId: string
+//         userMessage: ChatMessageItem
+//         assistantMessage: ChatMessageItem
+//         chatTitle?: string
+//     }>
+//     uploadDocument: (formData: FormData) => Promise<ChatDocumentItem | null>
+//     disabled?: boolean
+//     placeholder?: string
+//     className?: string
+// }
 
-export interface ChatBoxClientProps {
-    chatId?: string | null
-    documents?: ChatDocumentItem[]
-    setMessages?: React.Dispatch<React.SetStateAction<ChatMessageItem[]>>
-    setMessage?: React.Dispatch<React.SetStateAction<ChatMessageItem[]>> | ((msg: any) => void)
-    onMessageSent?: (userMessage: ChatMessageItem, assistantMessage: ChatMessageItem, newChatId?: string) => void
-    serverAction?: (params: { chatId?: string | null; query: string }) => Promise<{
-        chatId: string
-        userMessage: ChatMessageItem
-        assistantMessage: ChatMessageItem
-        chatTitle?: string
-    }>
-    uploadAction?: (formData: FormData) => Promise<ChatDocumentItem | null>
-    disabled?: boolean
-    placeholder?: string
-    className?: string
-}
-
-export function ChatBoxClient({
-    chatId: propChatId = null,
-    documents: propDocuments = [],
-    setMessages: propSetMessages,
-    setMessage: propSetMessage,
-    onMessageSent,
-    serverAction = sendMessageAndGetAIResponse,
-    uploadAction = uploadDocument,
-    disabled = false,
-    placeholder = "Type your message or ask about your documents...",
-    className = "",
-}: ChatBoxClientProps) {
+export function ChatBoxClient() {
     const router = useRouter()
 
     const context = useChatContext()
 
-    const [localInput, setLocalInput] = useState("")
-    const [localIsBusy, setLocalIsBusy] = useState(false)
-    const [localUploadStatus, setLocalUploadStatus] = useState<string | null>(null)
-    const [localDocuments, setLocalDocuments] = useState<ChatDocumentItem[]>(propDocuments)
+    const { chatId, input, setInput, isBusy, setIsBusy, uploadStatus, setUploadStatus, documents, setDocuments, setMessages } = context
 
-    useEffect(() => {
-        setLocalDocuments(propDocuments)
-    }, [propDocuments])
-
-    const chatId = propChatId ?? context?.chatId ?? null
-    const input = context ? context.input : localInput
-    const setInput = context ? context.setInput : setLocalInput
-    const isBusy = context ? context.isBusy : localIsBusy
-    const setIsBusy = context ? context.setIsBusy : setLocalIsBusy
-    const uploadStatus = context ? context.uploadStatus : localUploadStatus
-    const setUploadStatus = context ? context.setUploadStatus : setLocalUploadStatus
-    const documents = context ? (context.documents as ChatDocumentItem[]) : localDocuments
 
     const fileInputRef = useRef<HTMLInputElement>(null)
     const textareaRef = useRef<HTMLTextAreaElement>(null)
@@ -115,20 +76,14 @@ export function ChatBoxClient({
 
     const updateMessagesState = (updater: (prev: ChatMessageItem[]) => ChatMessageItem[]) => {
         if (context) {
-            context.setMessages(updater as any)
-        } else if (propSetMessages) {
-            propSetMessages(updater)
-        } else if (propSetMessage) {
-            if (typeof propSetMessage === "function") {
-                propSetMessage(updater as any)
-            }
+            setMessages(updater as any)
         }
     }
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
         const queryText = input.trim()
-        if (!queryText || isBusy || disabled) return
+        if (!queryText || isBusy) return
 
         setInput("")
         if (textareaRef.current) {
@@ -146,7 +101,7 @@ export function ChatBoxClient({
         setIsBusy(true)
 
         try {
-            const res = await serverAction({
+            const res = await sendMessageAndGetAIResponse({
                 chatId: chatId,
                 query: queryText,
             })
@@ -161,9 +116,9 @@ export function ChatBoxClient({
                 assistantMsg,
             ])
 
-            if (onMessageSent) {
-                onMessageSent(userMsg, assistantMsg, res.chatId)
-            }
+            // if (onMessageSent) {
+            //     onMessageSent(userMsg, assistantMsg, res.chatId)
+            // }
 
             if (context && res.chatId) {
                 context.setChatId(res.chatId)
@@ -202,15 +157,11 @@ export function ChatBoxClient({
         }
 
         try {
-            const file = await uploadAction(formData)
+            const file = await uploadDocument(formData)
             if (file) {
                 setUploadStatus(`Uploaded "${file.name}" successfully!`)
-                const newDoc = { id: file.id, name: file.name, doc_type: file.doc_type }
-                if (context) {
-                    context.setDocuments((prev: any) => [...prev, newDoc])
-                } else {
-                    setLocalDocuments((prev) => [...prev, newDoc])
-                }
+                const newDoc: ChatDocumentItem = { id: file.id, name: file.name, doc_type: file.doc_type, download_url: file.download_url }
+                setDocuments((prev: ChatDocumentItem[]) => [...prev, newDoc])
 
                 const systemMsg: ChatMessageItem = {
                     id: `upload-sys-${Date.now()}`,
@@ -234,7 +185,7 @@ export function ChatBoxClient({
     }
 
     return (
-        <div className={`w-full flex flex-col ${className}`}>
+        <div className={`w-full flex flex-col`}>
             {uploadStatus && (
                 <div className="mb-2 px-4 py-1.5 bg-accent/60 text-xs text-accent-foreground flex items-center gap-2 rounded-xl border border-border/40">
                     <IconFileCheck className="h-3.5 w-3.5 shrink-0 text-primary" />
@@ -242,7 +193,7 @@ export function ChatBoxClient({
                 </div>
             )}
 
-            <div className="w-full bg-card border border-border/60 rounded-2xl p-3 shadow-lg flex flex-col gap-2.5 transition-all focus-within:border-primary/50 focus-within:ring-1 focus-within:ring-primary/20">
+            <div className="w-full bg-card border border-border/60 rounded-2xl p-3 flex flex-col gap-2.5 transition-all focus-within:border-primary/50 focus-within:ring-1 focus-within:ring-primary/20">
                 {/* Uploaded Document Chips */}
                 {documents.length > 0 && (
                     <ChatDocuments documents={documents} />
@@ -258,8 +209,8 @@ export function ChatBoxClient({
                         value={input}
                         onChange={handleInputChange}
                         onKeyDown={handleKeyDown}
-                        placeholder={placeholder}
-                        disabled={isBusy || disabled}
+                        placeholder={"Ask anything..."}
+                        disabled={isBusy}
                         className="w-full bg-transparent text-foreground placeholder:text-muted-foreground/70 resize-none border-none outline-none text-sm px-1 py-1 min-h-[38px] max-h-[200px] overflow-y-auto focus:outline-none focus:ring-0 leading-relaxed"
                     />
 
@@ -270,7 +221,7 @@ export function ChatBoxClient({
                             <button
                                 type="button"
                                 onClick={() => fileInputRef.current?.click()}
-                                disabled={isBusy || disabled}
+                                disabled={isBusy}
                                 className="h-9 w-9 rounded-full bg-secondary/80 hover:bg-secondary flex items-center justify-center text-foreground transition-all border border-border/30 disabled:opacity-50"
                                 title="Attach document"
                             >
@@ -303,7 +254,7 @@ export function ChatBoxClient({
                         {/* Circular Blue Send Button */}
                         <button
                             type="submit"
-                            disabled={!input.trim() || isBusy || disabled}
+                            disabled={!input.trim() || isBusy}
                             className="h-9 w-9 rounded-full bg-primary hover:bg-primary/80 active:scale-95 text-white flex items-center justify-center shadow-md transition-all disabled:opacity-40 disabled:bg-muted disabled:text-muted-foreground disabled:active:scale-100 shrink-0 ml-auto"
                             title="Send message"
                         >

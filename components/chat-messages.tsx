@@ -1,4 +1,4 @@
-import { ChatMessageItem } from "./chat-window";
+import { ChatMessageItem } from "@/types";
 import { CardContent } from "./ui/card";
 import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "./ui/empty";
 import { IconMessageCircle } from "@tabler/icons-react";

@@ -3,7 +3,7 @@ import { authenticate } from "@/app/auth/user/actions";
 import { prisma } from "../prisma";
 import { revalidatePath } from "next/cache";
 import axios from "axios"
-import { ChatDocumentItem } from "@/components/chat-box-client";
+import { ChatDocumentItem } from "@/types";
 const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || process.env.BACKEND_URL || "http://127.0.0.1:8000";
 type ResponseType = {
     success: true,

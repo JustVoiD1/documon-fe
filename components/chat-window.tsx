@@ -5,10 +5,9 @@ import { Card } from "@/components/ui/card"
 import { MessageScrollerProvider } from "@/components/ui/message-scroller"
 import { ChatBox } from "@/components/chat-box"
 import { ChatMessages } from "./chat-messages"
-import { ChatContext, ChatProvider, ChatMessageItem, ChatDocument } from "@/app/context/chat-context"
+import { ChatContext, ChatProvider } from "@/app/context/chat-context"
 import useChatContext from "@/hooks/use-chat-context"
 
-export type { ChatMessageItem, ChatDocument }
 
 function ChatWindowInner() {
     const {
@@ -18,10 +17,10 @@ function ChatWindowInner() {
 
     return (
         <MessageScrollerProvider>
-            <div className="relative flex h-full min-h-0 w-full flex-col gap-4">
-                <Card className="mx-auto flex h-full min-h-0 w-full flex-col gap-0 overflow-hidden border-none shadow-none bg-transparent">
+            <div className="relative flex h-full min-h-0 w-full flex-col gap-4 bg-background">
+                <Card className="mx-auto flex h-full min-h-0 w-full flex-col gap-0 overflow-hidden border-none bg-background shadow-none">
                     <ChatMessages messages={messages} />
-                    <ChatBox documents={documents} />
+                    <ChatBox />
                 </Card>
             </div>
         </MessageScrollerProvider>

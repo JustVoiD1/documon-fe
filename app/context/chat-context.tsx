@@ -1,28 +1,16 @@
 "use client"
 
+import { ChatDocumentItem, ChatMessageItem } from "@/types";
 import { createContext, ReactNode, useState, useEffect } from "react";
 
-export interface ChatMessageItem {
-    id: string
-    role: "user" | "assistant" | "system"
-    content: string
-    created_at?: Date | string
-}
-
-export interface ChatDocument {
-    id: string,
-    name: string,
-    doc_type: string,
-    download_url: string | null
-}
 
 export type ChatContextType = {
     chatId: string | null
     setChatId: (id: string | null) => void
     messages: ChatMessageItem[]
     setMessages: React.Dispatch<React.SetStateAction<ChatMessageItem[]>>
-    documents: ChatDocument[]
-    setDocuments: React.Dispatch<React.SetStateAction<ChatDocument[]>>
+    documents: ChatDocumentItem[]
+    setDocuments: React.Dispatch<React.SetStateAction<ChatDocumentItem[]>>
     input: string
     setInput: React.Dispatch<React.SetStateAction<string>>
     isBusy: boolean
@@ -40,7 +28,7 @@ export interface ChatProviderProps {
     children: ReactNode
     initialChatId?: string | null
     initialMessages?: ChatMessageItem[]
-    initialDocuments?: ChatDocument[]
+    initialDocuments?: ChatDocumentItem[]
 }
 
 export const ChatProvider = ({
@@ -51,7 +39,7 @@ export const ChatProvider = ({
 }: ChatProviderProps) => {
     const [chatId, setChatId] = useState<string | null>(initialChatId);
     const [messages, setMessages] = useState<ChatMessageItem[]>(initialMessages);
-    const [documents, setDocuments] = useState<ChatDocument[]>(initialDocuments);
+    const [documents, setDocuments] = useState<ChatDocumentItem[]>(initialDocuments);
     const [input, setInput] = useState<string>("");
     const [isBusy, setIsBusy] = useState<boolean>(false);
     const [uploadStatus, setUploadStatus] = useState<string | null>(null);

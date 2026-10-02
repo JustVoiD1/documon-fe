@@ -63,7 +63,7 @@ export function MessageAnimated({
 
                 <MessageContent>
                     <Bubble variant={isUser ? "default" : "outline"} align={isUser ? "end" : "start"}>
-                        <BubbleContent className={cn("px-4 py-3 text-sm shadow-xs", isUser ? "rounded-2xl rounded-tr-xs" : "rounded-2xl rounded-tl-xs bg-muted/40 border-border/60")}>
+                        <BubbleContent className={cn("px-4 py-3 text-sm shadow-xs", isUser ? "rounded-2xl rounded-tr-xs" : "rounded-2xl rounded-tl-xs bg-muted/40 border-none")}>
                             <FormattedText text={text} />
                         </BubbleContent>
                     </Bubble>
