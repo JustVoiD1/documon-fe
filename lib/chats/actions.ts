@@ -3,6 +3,7 @@ import { authenticate } from "@/app/auth/user/actions";
 import { prisma } from "../prisma";
 import { revalidatePath } from "next/cache";
 import axios from "axios"
+import { ChatDocumentItem } from "@/components/chat-box-client";
 const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || process.env.BACKEND_URL || "http://127.0.0.1:8000";
 type ResponseType = {
     success: true,
@@ -165,14 +166,14 @@ export async function sendMessageAndGetAIResponse({
         if (response.data.error) {
             const errText = await response.data.error;
             console.error("Backend /query error:", response.status, errText);
-            aiResponseText = `Error from AI service (${response.status}): ${errText || "Unable to get response"}`;
+            aiResponseText = `Unable to get response`;
         } else {
             const resData = await response.data;
             aiResponseText = resData.answer || resData.response || resData.result || resData.reply || resData.message || (typeof resData === "string" ? resData : JSON.stringify(resData));
         }
     } catch (err: any) {
         console.error("Fetch error calling backend /query:", err);
-        aiResponseText = `Failed to connect to AI server at ${BACKEND_URL}. Please ensure the backend is running.`;
+        aiResponseText = `Something Went Wrong`;
     }
 
     // Save AI assistant message to PostgreSQL
@@ -224,14 +225,15 @@ export async function sendMessage(formData: FormData) {
 
 }
 
-export async function uploadDocument(formData: FormData) {
+export async function uploadDocument(formData: FormData): Promise<ChatDocumentItem | null> {
     const user = await authenticate();
 
-    const file = formData.get("file");
+    const file = formData.get("file") as File;
     const chatId = formData.get("chat_id") as string | null;
 
     if (!file || !(file instanceof File)) {
-        return { success: false, error: "No valid file uploaded." };
+        console.log("Error: no valid document to upload")
+        return null
     }
 
     try {
@@ -245,7 +247,7 @@ export async function uploadDocument(formData: FormData) {
         if (response.data.error) {
             const errDetail = await response.data.error;
             console.error("Upload error from backend:", response.status, errDetail);
-            return { success: false, error: `Upload failed (${response.status}): ${errDetail}` };
+            return null
         }
 
 
@@ -253,10 +255,10 @@ export async function uploadDocument(formData: FormData) {
             revalidatePath(`/chat/${chatId}`);
         }
 
-        return { success: true, message: response.data.message };
+        return response.data.document;
     } catch (err: any) {
         console.error("Document upload request failed:", err);
-        return { success: false, error: err.message || "Failed to reach backend upload endpoint." };
+        return null;
     }
 }
 

@@ -1,7 +1,9 @@
+"use client"
+
 import { useContext } from "react"
 import { ChatContext, ChatContextType } from "@/app/context/chat-context"
 
-export default function useChatContext(): ChatContextType {
+export function useChatContext(): ChatContextType {
     const context = useContext(ChatContext)
 
     if (!context) {
@@ -10,3 +12,5 @@ export default function useChatContext(): ChatContextType {
 
     return context
 }
+
+export default useChatContext

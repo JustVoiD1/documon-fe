@@ -21,6 +21,8 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { sendMessageAndGetAIResponse, uploadDocument } from "@/lib/chats/actions"
 import ModelSelector from "./model-selector"
+import { useChatContext } from "@/hooks/use-chat-context"
+import { ChatDocuments } from "./chat-documents"
 
 export interface ChatMessageItem {
     id: string
@@ -30,6 +32,7 @@ export interface ChatMessageItem {
 }
 
 export interface ChatDocumentItem {
+    id: string,
     name: string
     doc_type?: string
     download_url?: string | null
@@ -47,17 +50,17 @@ export interface ChatBoxClientProps {
         assistantMessage: ChatMessageItem
         chatTitle?: string
     }>
-    uploadAction?: (formData: FormData) => Promise<{ success: boolean; message?: string; error?: string }>
+    uploadAction?: (formData: FormData) => Promise<ChatDocumentItem | null>
     disabled?: boolean
     placeholder?: string
     className?: string
 }
 
 export function ChatBoxClient({
-    chatId = null,
-    documents = [],
-    setMessages,
-    setMessage,
+    chatId: propChatId = null,
+    documents: propDocuments = [],
+    setMessages: propSetMessages,
+    setMessage: propSetMessage,
     onMessageSent,
     serverAction = sendMessageAndGetAIResponse,
     uploadAction = uploadDocument,
@@ -66,16 +69,29 @@ export function ChatBoxClient({
     className = "",
 }: ChatBoxClientProps) {
     const router = useRouter()
-    const [input, setInput] = useState("")
-    const [isBusy, setIsBusy] = useState(false)
-    const [uploadStatus, setUploadStatus] = useState<string | null>(null)
-    const [docList, setDocList] = useState<ChatDocumentItem[]>(documents)
-    const fileInputRef = useRef<HTMLInputElement>(null)
-    const textareaRef = useRef<HTMLTextAreaElement>(null)
+
+    const context = useChatContext()
+
+    const [localInput, setLocalInput] = useState("")
+    const [localIsBusy, setLocalIsBusy] = useState(false)
+    const [localUploadStatus, setLocalUploadStatus] = useState<string | null>(null)
+    const [localDocuments, setLocalDocuments] = useState<ChatDocumentItem[]>(propDocuments)
 
     useEffect(() => {
-        setDocList(documents)
-    }, [chatId])
+        setLocalDocuments(propDocuments)
+    }, [propDocuments])
+
+    const chatId = propChatId ?? context?.chatId ?? null
+    const input = context ? context.input : localInput
+    const setInput = context ? context.setInput : setLocalInput
+    const isBusy = context ? context.isBusy : localIsBusy
+    const setIsBusy = context ? context.setIsBusy : setLocalIsBusy
+    const uploadStatus = context ? context.uploadStatus : localUploadStatus
+    const setUploadStatus = context ? context.setUploadStatus : setLocalUploadStatus
+    const documents = context ? (context.documents as ChatDocumentItem[]) : localDocuments
+
+    const fileInputRef = useRef<HTMLInputElement>(null)
+    const textareaRef = useRef<HTMLTextAreaElement>(null)
 
     const adjustTextareaHeight = () => {
         if (textareaRef.current) {
@@ -98,17 +114,15 @@ export function ChatBoxClient({
     }
 
     const updateMessagesState = (updater: (prev: ChatMessageItem[]) => ChatMessageItem[]) => {
-        if (setMessages) {
-            setMessages(updater)
-        } else if (setMessage) {
-            if (typeof setMessage === "function") {
-                setMessage(updater as any)
+        if (context) {
+            context.setMessages(updater as any)
+        } else if (propSetMessages) {
+            propSetMessages(updater)
+        } else if (propSetMessage) {
+            if (typeof propSetMessage === "function") {
+                propSetMessage(updater as any)
             }
         }
-    }
-
-    const handleRemoveDocument = (indexToRemove: number) => {
-        setDocList((prev) => prev.filter((_, idx) => idx !== indexToRemove))
     }
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -151,6 +165,10 @@ export function ChatBoxClient({
                 onMessageSent(userMsg, assistantMsg, res.chatId)
             }
 
+            if (context && res.chatId) {
+                context.setChatId(res.chatId)
+            }
+
             // If a new chat session was created, navigate to /chat/[chatId]
             if (!chatId && res.chatId) {
                 router.push(`/chat/${res.chatId}`)
@@ -184,19 +202,24 @@ export function ChatBoxClient({
         }
 
         try {
-            const response = await uploadAction(formData)
-            if (response.success) {
+            const file = await uploadAction(formData)
+            if (file) {
                 setUploadStatus(`Uploaded "${file.name}" successfully!`)
-                setDocList((prev) => [...prev, { name: file.name, doc_type: file.type }])
+                const newDoc = { id: file.id, name: file.name, doc_type: file.doc_type }
+                if (context) {
+                    context.setDocuments((prev: any) => [...prev, newDoc])
+                } else {
+                    setLocalDocuments((prev) => [...prev, newDoc])
+                }
 
                 const systemMsg: ChatMessageItem = {
                     id: `upload-sys-${Date.now()}`,
                     role: "assistant",
-                    content: `📎 **Uploaded document:** ${file.name}\n\n${response.message || "File uploaded and processed."}`,
+                    content: `📎 **Uploaded document:** ${file.name}`,
                 }
                 updateMessagesState((prev) => [...prev, systemMsg])
             } else {
-                setUploadStatus(`Upload error: ${response.error}`)
+                setUploadStatus(`Upload error`)
             }
         } catch (err: any) {
             console.error("Upload error:", err)
@@ -221,28 +244,8 @@ export function ChatBoxClient({
 
             <div className="w-full bg-card border border-border/60 rounded-2xl p-3 shadow-lg flex flex-col gap-2.5 transition-all focus-within:border-primary/50 focus-within:ring-1 focus-within:ring-primary/20">
                 {/* Uploaded Document Chips */}
-                {docList.length > 0 && (
-                    <div className="flex flex-wrap items-center gap-2 pb-1">
-                        {docList.map((doc, idx) => (
-                            <div
-                                key={idx}
-                                className="bg-secondary/80 border border-border/40 hover:bg-secondary rounded-xl px-3 py-1.5 flex items-center gap-2 text-xs font-medium text-foreground transition-all group"
-                            >
-                                <div className="bg-background/80 p-1 rounded-md text-muted-foreground group-hover:text-foreground">
-                                    <IconFileText className="h-3.5 w-3.5" />
-                                </div>
-                                <span className="truncate max-w-[200px]">{doc.name}</span>
-                                <button
-                                    type="button"
-                                    onClick={() => handleRemoveDocument(idx)}
-                                    className="text-muted-foreground hover:text-foreground transition-colors p-0.5 rounded-full hover:bg-background/50 ml-0.5"
-                                    title="Remove document"
-                                >
-                                    <IconX className="h-3.5 w-3.5" />
-                                </button>
-                            </div>
-                        ))}
-                    </div>
+                {documents.length > 0 && (
+                    <ChatDocuments documents={documents} />
                 )}
 
                 {/* Auto-expanding Textarea Form */}

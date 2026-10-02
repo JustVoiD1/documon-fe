@@ -7,6 +7,7 @@ import {
     SidebarProvider,
 } from "@/components/ui/sidebar";
 import { redirect } from "next/navigation";
+import { ChatProvider } from "@/app/context/chat-context";
 
 export default async function ChatPage({
     params,
@@ -28,16 +29,22 @@ export default async function ChatPage({
     }));
 
     return (
-        <SidebarProvider>
-            <AppSidebar />
-            <SidebarInset className="h-svh overflow-hidden">
-                <ChatHeader title={chat.title || 'New Chat'} />
-                <div className="flex flex-1 flex-col min-h-0 gap-4 p-4 pt-0 overflow-hidden">
-                    <div className="h-full flex-1 min-h-0 rounded-xl bg-muted/50 overflow-hidden">
-                        <ChatWindow chatId={chat.id} initialMessages={initialMessages} documents={documents} />
+        <ChatProvider
+            initialChatId={chat.id}
+            initialMessages={initialMessages}
+            initialDocuments={documents}
+        >
+            <SidebarProvider>
+                <AppSidebar />
+                <SidebarInset className="h-svh overflow-hidden">
+                    <ChatHeader title={chat.title || 'New Chat'} />
+                    <div className="flex flex-1 flex-col min-h-0 gap-4 p-4 pt-0 overflow-hidden">
+                        <div className="h-full flex-1 min-h-0 rounded-xl bg-muted/50 overflow-hidden">
+                            <ChatWindow />
+                        </div>
                     </div>
-                </div>
-            </SidebarInset>
-        </SidebarProvider>
+                </SidebarInset>
+            </SidebarProvider>
+        </ChatProvider>
     );
 }
