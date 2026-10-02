@@ -1,10 +1,18 @@
 
-import { IconFileCheck, IconFileText, IconX } from "@tabler/icons-react"
+import { IconFileText, IconMarkdown, IconFileTypePdf, IconFileTypeTxt, IconX, ReactNode, IconFileTypeXls } from "@tabler/icons-react"
 import { CardContent } from "./ui/card"
 import Link from "next/link"
-import { ChatDocumentItem } from "@/components/chat-box-client"
 import useChatContext from "@/hooks/use-chat-context"
-
+import type { ChatDocumentItem } from "@/types"
+const DocIcon = new Map<string, ReactNode>([
+    ["pdf", <IconFileTypePdf className="h-3.5 w-3.5 text-red-500" />],
+    ["txt", <IconFileTypeTxt className="h-3.5 w-3.5 text-blue-500" />],
+    ["xlsx", <IconFileTypeXls className="h-3.5 w-3.5 text-green-500" />],
+    ["xls", <IconFileTypeXls className="h-3.5 w-3.5 text-green-500" />],
+    ["md", <IconMarkdown className="h-3.5 w-3.5 text-yellow-500" />],
+    ["docx", <IconFileText className="h-3.5 w-3.5 text-blue-500" />],
+    ["doc", <IconFileText className="h-3.5 w-3.5 text-blue-500" />],
+]);
 export function ChatDocuments({ documents }: { documents: ChatDocumentItem[] }) {
     const { removeDocument } = useChatContext()
     const handleRemoveDocument = (id: string) => {
@@ -21,7 +29,7 @@ export function ChatDocuments({ documents }: { documents: ChatDocumentItem[] }) 
                     className="bg-secondary/80 border border-border/40 hover:bg-secondary rounded-xl px-3 py-1.5 flex items-center gap-2 text-xs font-medium text-foreground transition-all group"
                 >
                     <div className="bg-background/80 p-1 rounded-md text-muted-foreground group-hover:text-foreground">
-                        <IconFileText className="h-3.5 w-3.5" />
+                        {DocIcon.get(doc.doc_type) || <IconFileText className="h-3.5 w-3.5" />}
                     </div>
                     <span className="truncate max-w-50">{doc.name}</span>
                     <button

@@ -33,6 +33,14 @@ export function NavUser({
   }
 }) {
   const { isMobile } = useSidebar()
+  const iconText = user.name
+    .trim()
+    .split(/\s+/)
+    .map(name => name[0])
+    .join('')
+    .toUpperCase();
+
+
   return (
     <SidebarMenu>
       <SidebarMenuItem>
@@ -43,7 +51,7 @@ export function NavUser({
             }
           >
             <Avatar>
-              <AvatarFallback>CN</AvatarFallback>
+              <AvatarFallback>{iconText}</AvatarFallback>
             </Avatar>
             <div className="grid flex-1 text-left text-sm leading-tight">
               <span className="truncate font-medium">{user.name}</span>
@@ -61,7 +69,7 @@ export function NavUser({
               <DropdownMenuLabel className="p-0 font-normal">
                 <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
                   <Avatar>
-                    <AvatarFallback>CN</AvatarFallback>
+                    <AvatarFallback>{iconText}</AvatarFallback>
                   </Avatar>
                   <div className="grid flex-1 text-left text-sm leading-tight">
                     <span className="truncate font-medium">{user.name}</span>

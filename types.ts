@@ -3,6 +3,7 @@ export interface ChatMessageItem {
     role: "user" | "assistant" | "system"
     content: string
     created_at?: Date | string
+    isStreaming?: boolean
 }
 
 export interface ChatDocumentItem {

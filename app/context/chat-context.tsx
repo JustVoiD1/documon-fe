@@ -1,14 +1,15 @@
 "use client"
 
 import { ChatDocumentItem, ChatMessageItem } from "@/types";
-import { createContext, ReactNode, useState, useEffect } from "react";
+import { createContext, ReactNode, useState } from "react";
+import { useChat } from "@ai-sdk/react";
 
 
 export type ChatContextType = {
     chatId: string | null
     setChatId: (id: string | null) => void
     messages: ChatMessageItem[]
-    setMessages: React.Dispatch<React.SetStateAction<ChatMessageItem[]>>
+    setMessages: (messages: ChatMessageItem[] | ((prev: ChatMessageItem[]) => ChatMessageItem[])) => void
     documents: ChatDocumentItem[]
     setDocuments: React.Dispatch<React.SetStateAction<ChatDocumentItem[]>>
     input: string
@@ -20,6 +21,7 @@ export type ChatContextType = {
     addMessage: (message: ChatMessageItem) => void
     removeDocument: (id: string) => void
     clearChat: () => void
+    status?: string
 }
 
 export const ChatContext = createContext<ChatContextType | null>(null);
@@ -38,14 +40,22 @@ export const ChatProvider = ({
     initialDocuments = [],
 }: ChatProviderProps) => {
     const [chatId, setChatId] = useState<string | null>(initialChatId);
-    const [messages, setMessages] = useState<ChatMessageItem[]>(initialMessages);
     const [documents, setDocuments] = useState<ChatDocumentItem[]>(initialDocuments);
     const [input, setInput] = useState<string>("");
     const [isBusy, setIsBusy] = useState<boolean>(false);
     const [uploadStatus, setUploadStatus] = useState<string | null>(null);
 
+    const {
+        messages: chatMessages,
+        setMessages: setChatMessages,
+        status,
+    } = useChat({
+        id: chatId || undefined,
+        messages: initialMessages as any,
+    });
+
     const addMessage = (message: ChatMessageItem) => {
-        setMessages((prev) => [...prev, message]);
+        setChatMessages((prev: any) => [...prev, message]);
     };
 
     const removeDocument = (id: string) => {
@@ -53,7 +63,7 @@ export const ChatProvider = ({
     };
 
     const clearChat = () => {
-        setMessages([]);
+        setChatMessages([]);
         setDocuments([]);
         setInput("");
         setUploadStatus(null);
@@ -64,8 +74,8 @@ export const ChatProvider = ({
             value={{
                 chatId,
                 setChatId,
-                messages,
-                setMessages,
+                messages: chatMessages as unknown as ChatMessageItem[],
+                setMessages: setChatMessages as any,
                 documents,
                 setDocuments,
                 input,
@@ -77,9 +87,11 @@ export const ChatProvider = ({
                 addMessage,
                 removeDocument,
                 clearChat,
+                status,
             }}
         >
             {children}
         </ChatContext.Provider>
     );
 };
+

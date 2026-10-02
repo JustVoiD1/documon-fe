@@ -4,7 +4,7 @@ import { prisma } from "../prisma";
 import { revalidatePath } from "next/cache";
 import axios from "axios"
 import { ChatDocumentItem } from "@/types";
-const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || process.env.BACKEND_URL || "http://127.0.0.1:8000";
+const BACKEND_URL = process.env.BACKEND_URL;
 type ResponseType = {
     success: true,
     message: string,
@@ -147,14 +147,8 @@ export async function sendMessageAndGetAIResponse({
         }
     });
 
-    // Call Python backend query endpoint
     let aiResponseText = "";
     try {
-        console.log({
-            query: query,
-            chat_id: currentChatId,
-            top_k: 3
-        })
         const response = await axios.post(`${BACKEND_URL}/api/query`, {
 
             query: query,

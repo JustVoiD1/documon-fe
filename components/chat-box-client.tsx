@@ -1,13 +1,11 @@
 "use client"
 
-import { useState, useRef, useEffect } from "react"
+import { useRef } from "react"
 import { useRouter } from "next/navigation"
 import {
     IconArrowUp,
     IconGlobe,
     IconPaperclip,
-    IconFileText,
-    IconX,
     IconLoader2,
     IconFileCheck,
 } from "@tabler/icons-react"
@@ -17,7 +15,6 @@ import {
     DropdownMenuContent,
     DropdownMenuItem,
     DropdownMenuSeparator,
-    DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 
 import { useChatContext } from "@/hooks/use-chat-context"
@@ -49,7 +46,6 @@ export function ChatBoxClient() {
     const context = useChatContext()
 
     const { chatId, input, setInput, isBusy, setIsBusy, uploadStatus, setUploadStatus, documents, setDocuments, setMessages } = context
-
 
     const fileInputRef = useRef<HTMLInputElement>(null)
     const textareaRef = useRef<HTMLTextAreaElement>(null)
@@ -126,7 +122,7 @@ export function ChatBoxClient() {
 
             // If a new chat session was created, navigate to /chat/[chatId]
             if (!chatId && res.chatId) {
-                router.push(`/chat/${res.chatId}`)
+                router.push(`/chat/${res.chatId}`, { scroll: false })
                 router.refresh()
             }
         } catch (err) {
@@ -200,7 +196,9 @@ export function ChatBoxClient() {
                 )}
 
                 {/* Auto-expanding Textarea Form */}
-                <form onSubmit={handleSubmit} className="w-full flex flex-col gap-2.5">
+                <form onSubmit={handleSubmit} className="w-full flex flex-col gap-2.5" style={{
+                    cursor: isBusy ? "not-allowed" : "auto"
+                }}>
                     {chatId && <input type="hidden" value={chatId} name="chatId" />}
 
                     <textarea
