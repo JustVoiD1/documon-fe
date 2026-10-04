@@ -41,7 +41,7 @@ model Document {
   document_chunks DocumentChunk[]
 
   document_uploader User @relation(fields: [uploaded_by], references: [id])
-  chat              Chat @relation(fields: [chat_id], references: [id])
+  chat              Chat @relation(fields: [chat_id], references: [id], onDelete: Cascade)
 
   @@map("documents")
   @@schema("public")

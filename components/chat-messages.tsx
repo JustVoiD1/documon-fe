@@ -34,7 +34,7 @@ export function ChatMessages({ messages }: { messages: ChatMessageItem[] }) {
                             <MessageAnimated
                                 key={message.id}
                                 message={message}
-                                scrollAnchor={index === messages.length - 1}
+                                scrollAnchor={index === messages.length - 2}
                             />
                         ))}
 

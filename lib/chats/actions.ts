@@ -261,14 +261,42 @@ export async function deleteChat(chatId: string) {
     if (!user) return { success: false, error: 'Could not delete chat' };
 
     try {
+        const isOriginalUser = await prisma.chat.findUnique({
+            where: {
+                id: chatId,
+                creator_id: user.id
+            }
+        })
+        if (!isOriginalUser) {
+            return { success: false, error: 'You are not authorized to delete this chat' };
+        }
+
+
         await prisma.chat.delete({
             where: {
                 id: chatId,
                 creator_id: user.id
             }
         });
-        revalidatePath("/chat");
-        return { success: true };
+
+        const response = await axios.delete(
+            `${BACKEND_URL}/api/documents`,
+            {
+                data: {
+                    chat_id: chatId
+                },
+                headers: {
+                    "Content-Type": "application/json",
+                }
+            }
+        )
+        if (response.data.success) {
+            revalidatePath("/chat");
+            return { success: true };
+        }
+        else {
+            return { success: false, error: response.data.error };
+        }
     } catch (err) {
         console.error("Delete chat error:", err);
         return { success: false, error: 'Error deleting chat' };

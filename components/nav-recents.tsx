@@ -61,8 +61,8 @@ export function NavRecents({
                   <Link
                     href={`/chat/${item.id}`}
                     className={`flex items-center gap-2 w-full truncate ${isActive
-                        ? "bg-sidebar-accent text-sidebar-accent-foreground font-semibold"
-                        : ""
+                      ? "bg-sidebar-accent text-sidebar-accent-foreground font-semibold"
+                      : ""
                       }`}
                   />
                 }

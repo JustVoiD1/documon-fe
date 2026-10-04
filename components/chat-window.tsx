@@ -1,15 +1,12 @@
-"use client"
+'use client';
 
-import { useContext } from "react"
-import { Card } from "@/components/ui/card"
-import { MessageScrollerProvider } from "@/components/ui/message-scroller"
-import { ChatBox } from "@/components/chat-box"
-import { ChatMessages } from "./chat-messages"
-import { ChatContext, ChatProvider } from "@/app/context/chat-context"
-import useChatContext from "@/hooks/use-chat-context"
+import { Card } from "./ui/card";
+import { ChatBox } from "./chat-box";
+import { ChatMessages } from "./chat-messages";
+import useChatContext from "@/hooks/use-chat-context";
+import { MessageScrollerProvider } from "./ui/message-scroller";
 
-
-function ChatWindowInner() {
+export function ChatWindow() {
     const {
         messages,
         documents,
@@ -26,18 +23,3 @@ function ChatWindowInner() {
         </MessageScrollerProvider>
     )
 }
-
-export function ChatWindow() {
-    const existingContext = useContext(ChatContext);
-
-    if (existingContext) {
-        return <ChatWindowInner />;
-    }
-
-    return (
-        <ChatProvider>
-            <ChatWindowInner />
-        </ChatProvider>
-    );
-}
-
