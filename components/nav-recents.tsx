@@ -1,5 +1,6 @@
 "use client"
 
+import { useState } from "react"
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
 import {
@@ -17,8 +18,9 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar"
-import { IconDots, IconTrash, IconMessage } from "@tabler/icons-react"
+import { IconDots, IconTrash, IconMessage, IconPencil } from "@tabler/icons-react"
 import { deleteChat } from "@/lib/chats/actions"
+import RenameChatDialog from "./rename-chat-button"
 
 export function NavRecents({
   recents,
@@ -31,6 +33,7 @@ export function NavRecents({
   const { isMobile } = useSidebar()
   const pathname = usePathname()
   const router = useRouter()
+  const [renamingChat, setRenamingChat] = useState<{ id: string; title: string | null } | null>(null)
 
   const handleDelete = async (chatId: string) => {
     const res = await deleteChat(chatId)
@@ -44,66 +47,84 @@ export function NavRecents({
   }
 
   return (
-    <SidebarGroup className="group-data-[collapsible=icon]:hidden">
-      <SidebarGroupLabel className="flex items-center justify-between">
-        <span>Recents</span>
-      </SidebarGroupLabel>
-      <SidebarMenu>
-        {recents.map((item) => {
-          const isActive = pathname === `/chat/${item.id}`
+    <>
+      <SidebarGroup className="group-data-[collapsible=icon]:hidden">
+        <SidebarGroupLabel className="flex items-center justify-between">
+          <span>Recents</span>
+        </SidebarGroupLabel>
+        <SidebarMenu>
+          {recents.map((item) => {
+            const isActive = pathname === `/chat/${item.id}`
 
-          return (
-            <SidebarMenuItem key={item.id}>
-              <SidebarMenuButton
-                isActive={isActive}
-                tooltip={item.title || "Untitled Chat"}
-                render={
-                  <Link
-                    href={`/chat/${item.id}`}
-                    className={`flex items-center gap-2 w-full truncate ${isActive
-                      ? "bg-sidebar-accent text-sidebar-accent-foreground font-semibold"
-                      : ""
-                      }`}
-                  />
-                }
-              >
-                <IconMessage className="h-4 w-4 shrink-0 opacity-70" />
-                <span className="truncate">{item.title || "Untitled Chat"}</span>
-              </SidebarMenuButton>
-              <DropdownMenu>
-                <DropdownMenuTrigger
+            return (
+              <SidebarMenuItem key={item.id}>
+                <SidebarMenuButton
+                  isActive={isActive}
+                  tooltip={item.title || "Untitled Chat"}
                   render={
-                    <SidebarMenuAction
-                      showOnHover
-                      className="aria-expanded:bg-muted"
+                    <Link
+                      href={`/chat/${item.id}`}
+                      className={`flex items-center gap-2 w-full truncate ${isActive
+                        ? "bg-sidebar-accent text-sidebar-accent-foreground font-semibold"
+                        : ""
+                        }`}
                     />
                   }
                 >
-                  <IconDots />
-                  <span className="sr-only">More</span>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent
-                  className="w-fit"
-                  side={isMobile ? "bottom" : "right"}
-                  align={isMobile ? "end" : "start"}
-                >
-                  <DropdownMenuItem variant="destructive" onClick={() => handleDelete(item.id)}>
-                    <IconTrash />
-                    <span>Delete Chat</span>
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
+                  <IconMessage className="h-4 w-4 shrink-0 opacity-70" />
+                  <span className="truncate">{item.title || "Untitled Chat"}</span>
+                </SidebarMenuButton>
+                <DropdownMenu>
+                  <DropdownMenuTrigger
+                    render={
+                      <SidebarMenuAction
+                        showOnHover
+                        className="aria-expanded:bg-muted"
+                      />
+                    }
+                  >
+                    <IconDots />
+                    <span className="sr-only">More</span>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent
+                    className="w-fit"
+                    side={isMobile ? "bottom" : "right"}
+                    align={isMobile ? "end" : "start"}
+                  >
+                    <DropdownMenuItem onClick={() => setRenamingChat(item)}>
+                      <IconPencil className="h-4 w-4 shrink-0" />
+                      <span>Rename Chat</span>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem variant="destructive" onClick={() => handleDelete(item.id)}>
+                      <IconTrash className="h-4 w-4 shrink-0" />
+                      <span>Delete Chat</span>
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </SidebarMenuItem>
+            )
+          })}
+          {recents.length === 0 && (
+            <SidebarMenuItem>
+              <SidebarMenuButton disabled className="text-muted-foreground text-xs italic">
+                <span>No recent chats</span>
+              </SidebarMenuButton>
             </SidebarMenuItem>
-          )
-        })}
-        {recents.length === 0 && (
-          <SidebarMenuItem>
-            <SidebarMenuButton disabled className="text-muted-foreground text-xs italic">
-              <span>No recent chats</span>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-        )}
-      </SidebarMenu>
-    </SidebarGroup>
+          )}
+        </SidebarMenu>
+      </SidebarGroup>
+
+      {renamingChat && (
+        <RenameChatDialog
+          chatId={renamingChat.id}
+          currentTitle={renamingChat.title}
+          open={!!renamingChat}
+          onOpenChange={(open) => {
+            if (!open) setRenamingChat(null)
+          }}
+        />
+      )}
+    </>
   )
 }
+

@@ -303,6 +303,44 @@ export async function deleteChat(chatId: string) {
     }
 }
 
+
+export async function renameChat(chatId: string, newTitle: string) {
+    const user = await authenticate();
+    if (!user) return { success: false, error: 'Could not rename chat' };
+
+    const chat = await prisma.chat.findUnique({
+        where: {
+            id: chatId,
+            creator_id: user.id
+        }
+    })
+    if (!chat) {
+        return { success: false, error: 'Chat not found' };
+    }
+    if (newTitle === chat.title) {
+        return { success: false, error: 'New title is same as old title' };
+    }
+
+    const updatedChat = await prisma.chat.update({
+        where: {
+            id: chatId,
+            creator_id: user.id
+        },
+        data: {
+            title: newTitle
+        }
+    })
+
+    if (!updatedChat) {
+        return { success: false, error: 'Failed to rename chat' };
+    }
+
+    revalidatePath(`/chat/${chatId}`);
+    revalidatePath("/chat");
+
+    return { success: true, chat: updatedChat };
+
+}
 // get the list of documents {doc_type: str, name, download_url}
 
 export async function getDocumentsByChatId(chat_id: string) {
